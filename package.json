@@ -1,0 +1,25 @@
+{
+  "name": "pos-client",
+  "version": "1.0.0",
+  "description": "a client demo for the pos",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "node start.js"
+  },
+  "dependencies": {
+    "socket.io-client": "^2.2.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.3.4",
+    "@babel/preset-env": "^7.3.4",
+    "@babel/preset-flow": "^7.0.0",
+    "@babel/register": "^7.0.0",
+    "babel-eslint": "^10.0.1",
+    "babel-preset-env": "^1.7.0",
+    "babel-register": "^6.26.0",
+    "eslint": "^5.15.2",
+    "eslint-plugin-flowtype": "^3.4.2",
+    "flow": "^0.2.3"
+  }
+}
