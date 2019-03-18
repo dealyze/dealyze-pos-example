@@ -24,6 +24,26 @@ const socket = io("ws://localhost:3100");
 // connect occurs when we successfully esablish a connection to dealyze
 socket.on("connect", () => {
   console.log("connected");
+
+  // simulate an employee and customer sync:
+  // 1. if an employee with the passed in employee.code is not created yet,
+  //    their account will be created. if their account is created they will
+  //    be signed in
+  // 2. if a customer with the passed in cusomter.phoneNumber is not signed
+  //    up yet, they will be prompted to sign up, otherwise they will be
+  //    signed in
+  setTimeout(
+    () =>
+      socket.emit("customer", {
+        employee: {
+          code: "136590",
+          firstName: "Mark",
+          lastName: "Salpeter",
+          emailAddress: "mark@dealyze.com"
+        }
+      }),
+    100
+  );
 });
 
 // disconnect occurs when dealyze shuts down or restarts
@@ -52,11 +72,3 @@ socket.on("customer", (customer: Customer) => {
 socket.on("order", order => {
   console.log("order:", order);
 });
-
-// signUp occurs when a customer opens a new line
-function signUp(customer: Customer, employee: Employee) {
-  socket.emit("customer", {
-    customer,
-    employee
-  });
-}
