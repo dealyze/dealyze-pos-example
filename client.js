@@ -36,10 +36,10 @@ socket.on("connect", () => {
     () =>
       socket.emit("customer", {
         employee: {
-          code: "136590",
+          code: "136592",
           firstName: "Mark",
           lastName: "Salpeter",
-          emailAddress: "mark@dealyze.com"
+          emailAddress: "mark+testingisgood@dealyze.com"
         }
       }),
     100
@@ -56,15 +56,9 @@ socket.on("disconnect", reason => {
   }
 });
 
-// error occurs whenever there is a connection error or a problem with
-// an emited event in the api
-socket.on("error", error => {
-  console.error("error:", error);
-});
-
-// customer occurs when a cusomer has signed in
-socket.on("customer", (customer: Customer) => {
-  console.log("customer:", customer);
+// customer occurs when a cusomer has signed in or when there's an error
+socket.on("customer", payload => {
+  console.log("customer:", payload);
 });
 
 // order occurs when a redemption or a reward is taking place
