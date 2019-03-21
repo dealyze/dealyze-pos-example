@@ -36,10 +36,17 @@ socket.on("connect", () => {
     () =>
       socket.emit("customer", {
         employee: {
-          code: "136592",
-          firstName: "Mark",
-          lastName: "Salpeter",
-          emailAddress: "mark+testingisgood@dealyze.com"
+          code: "123456",
+          firstName: "Bob",
+          lastName: "Johnson",
+          emailAddress: "bob@dealyze.com"
+        },
+        customer: {
+          phoneNumber: "5551234567",
+          firstName: "John",
+          lastName: "Bobson",
+          emailAddress: "john@dealyze.com",
+          birthdayAt: "2019-03-21T09:50:27.562Z"
         }
       }),
     100
