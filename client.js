@@ -64,12 +64,52 @@ socket.on("disconnect", reason => {
 });
 
 // customer occurs when a cusomer has signed in or when there's an error
-socket.on("customer", payload => {
-  console.log("customer:", payload);
+socket.on("customer", ({ customer, error }) => {
+  if (error) {
+    console.log("customer: ", error);
+    return;
+  }
+  console.log("customer checked in:", customer);
+
+  // pay 4 bills
+  setTimeout(
+    () =>
+      socket.emit("order", {
+        order: {
+          items: [
+            {
+              name: "Bill Pay",
+              skus: ["abc123"],
+              count: 4
+            }
+          ]
+        }
+      }),
+    5000
+  );
 });
 
 // order occurs when a redemption or a reward is taking place
 // in the future order may also be called during the redemption of a promotion
-socket.on("order", order => {
-  console.log("order:", order);
+socket.on("order", ({ order, error }) => {
+  if (error) {
+    console.log(error);
+    return;
+  }
+
+  console.log("confirm redemption of:", order.discounts[0].name);
+
+  // confirm the redemption by adding the relevant line item
+  // to the order and sending it back after the checkout is complete
+  order.items = [
+    {
+      name: order.discounts[0].name,
+      skus: order.discounts[0].skus,
+      price: 123456
+    }
+  ];
+  order.total = 0;
+  socket.emit("order", {
+    order
+  });
 });

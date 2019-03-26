@@ -3,5 +3,6 @@ require("@babel/register")({
   presets: ["@babel/preset-env", "@babel/preset-flow"]
 });
 
-// Import the rest of our application.
-module.exports = require("./client.js");
+process.argv.splice(2).forEach(function(scriptName) {
+  module.exports = require("./" + scriptName + ".js");
+});
