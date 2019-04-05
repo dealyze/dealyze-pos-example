@@ -8,10 +8,12 @@
     "start": "node start.js client"
   },
   "dependencies": {
+    "@babel/runtime": "^7.4.3",
     "socket.io-client": "^2.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.3.4",
+    "@babel/plugin-transform-runtime": "^7.4.3",
     "@babel/preset-env": "^7.3.4",
     "@babel/preset-flow": "^7.0.0",
     "@babel/register": "^7.0.0",

@@ -1,56 +1,29 @@
 import io from "socket.io-client";
+import readline from "readline";
 
-// Customer represents all of the customers data on the dealyze platform
-interface Customer {
-  firstName: String;
-  lastName: String;
-  phoneNumber: String;
-  emailAddress: String;
-  birthdayAt: String;
-}
+// clear the screen
+readline.cursorTo(process.stdout, 0, 0);
+readline.clearScreenDown(process.stdout);
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
 
-// Employee represents all of the employee data on the dealyze platform
-interface Employee {
-  firstName: String;
-  lastName: String;
-  emailAddress: String;
-  code: String;
-}
-
+// initialize the socket
 console.log("searching for dealyze...");
+const socket = io("ws://localhost:3100/");
 
-const socket = io("ws://localhost:3100");
+/**
+ * employee is the current employee logged in in the register
+ */
+let employee = {
+  id: 12345,
+  username: "bobjohnson"
+};
 
 // connect occurs when we successfully esablish a connection to dealyze
 socket.on("connect", () => {
   console.log("connected");
-
-  // simulate an employee and customer sync:
-  // 1. if an employee with the passed in employee.code is not created yet,
-  //    their account will be created. if their account is created they will
-  //    be signed in
-  // 2. if a customer with the passed in cusomter.phoneNumber is not signed
-  //    up yet, they will be prompted to sign up, otherwise they will be
-  //    signed in
-  setTimeout(
-    () =>
-      socket.emit("customer", {
-        employee: {
-          code: "123456",
-          firstName: "Bob",
-          lastName: "Johnson",
-          emailAddress: "bob@dealyze.com"
-        },
-        customer: {
-          phoneNumber: "5551234567",
-          firstName: "John",
-          lastName: "Bobson",
-          emailAddress: "john@dealyze.com",
-          birthdayAt: "2019-03-21T09:50:27.562Z"
-        }
-      }),
-    100
-  );
 });
 
 // disconnect occurs when dealyze shuts down or restarts
@@ -69,47 +42,104 @@ socket.on("customer", ({ customer, error }) => {
     console.log("customer: ", error);
     return;
   }
-  console.log("customer checked in:", customer);
-
-  // pay 4 bills
-  setTimeout(
-    () =>
-      socket.emit("order", {
-        order: {
-          items: [
-            {
-              name: "Bill Pay",
-              skus: ["abc123"],
-              count: 4
-            }
-          ]
-        }
-      }),
-    5000
-  );
+  console.log(`customer signed in with number ${customer.phoneNumber}`);
+  payBill(customer);
 });
 
 // order occurs when a redemption or a reward is taking place
 // in the future order may also be called during the redemption of a promotion
 socket.on("order", ({ order, error }) => {
   if (error) {
-    console.log(error);
+    console.log("order: ", error);
     return;
   }
-
-  console.log("confirm redemption of:", order.discounts[0].name);
-
-  // confirm the redemption by adding the relevant line item
-  // to the order and sending it back after the checkout is complete
-  order.items = [
-    {
-      name: order.discounts[0].name,
-      skus: order.discounts[0].skus,
-      price: 123456
-    }
-  ];
-  order.total = 0;
-  socket.emit("order", {
-    order
-  });
+  if (order.discounts.length > 0) {
+    console.log(`order received with ${order.discounts[0].name}`);
+    redeemReward(order);
+  }
 });
+
+/**
+ * confirmRedemption prompts the user to confirm the reward redemption
+ */
+const redeemReward = order =>
+  !order
+    ? console.log("customer did not ask to redeem a reward")
+    : rl.question(
+        `approve the redeemption of ${
+          order.discounts[0].name
+        }? [yes/no/cancel]: `,
+        answer => {
+          answer = answer.toLowerCase ? answer.toLowerCase() : answer;
+
+          // return to the menu
+          if (answer === "cancel") {
+            return;
+          }
+
+          // to redeem the reward, add the relevant line items
+          // and send it back to Dealyze
+          if (answer === "yes") {
+            order.items = [
+              {
+                name: order.discounts[0].name,
+                skus: order.discounts[0].skus,
+                price: 123456
+              }
+            ];
+            order.total = 0;
+            socket.emit("order", {
+              order,
+              employee
+            });
+            return console.log("approved redemption");
+          }
+
+          // to cancel the redemption remove the discount from the order
+          // and send it back to Dealyze
+          if (answer === "no") {
+            delete order.discounts[0];
+            socket.emit("order", {
+              order,
+              employee
+            });
+            return console.log("redemption canceled");
+          }
+
+          // bad input
+          console.log("you must enter 'yes' or 'no'");
+        }
+      );
+
+/**
+ *payBill prompts the employee for a bill payment
+ */
+const payBill = async () =>
+  rl.question("how many bills did the customer pay?: ", response => {
+    if (response === "cancel") {
+      return console.log(`bill payment cancelled`);
+    }
+
+    const count = parseInt(response);
+
+    // bad input
+    if (count < 1 || count === NaN) {
+      console.log(`you must enter a number > 0`);
+      return;
+    }
+
+    // send the bill payment order with the current employee information
+    socket.emit("order", {
+      employee,
+      order: {
+        items: [
+          {
+            name: "Bill Pay",
+            skus: ["abc123"], // TODO: get the real bill pay sku from RTPOS
+            count
+          }
+        ]
+      }
+    });
+    return console.log(`${count} bill${count > 1 ? "s" : ""} paid`);
+  });
