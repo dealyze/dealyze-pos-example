@@ -17,13 +17,18 @@ const socket = io("ws://localhost:3100/");
  * employee is the current employee logged in in the register
  */
 let employee = {
-  id: 12345,
-  username: "bobjohnson"
+  id: 1234212321,
+  username: "username"
 };
 
 // connect occurs when we successfully esablish a connection to dealyze
 socket.on("connect", () => {
   console.log("connected");
+});
+
+socket.on("ready", () => {
+  console.log("read received. sending employee");
+  socket.emit("employee", { employee });
 });
 
 // disconnect occurs when dealyze shuts down or restarts
@@ -135,7 +140,7 @@ const payBill = async () =>
         items: [
           {
             name: "Bill Pay",
-            skus: ["abc123"], // TODO: get the real bill pay sku from RTPOS
+            skus: ["_BILLPAY_"], // TODO: get the real bill pay sku from RTPOS
             count
           }
         ]
